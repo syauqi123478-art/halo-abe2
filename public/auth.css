@@ -1,0 +1,33 @@
+:root{
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --accent:#3a6f54;
+  --muted:#98a3a0;
+  --danger:#e95656;
+}
+*{box-sizing:border-box}
+body{font-family:Inter, system-ui, Arial, sans-serif;background:var(--bg);color:#233;}
+.auth-wrap{max-width:920px;margin:90px auto;padding:24px;display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:start}
+.auth-left{background:linear-gradient(180deg,#e8f4ff, #f7fbff);padding:30px;border-radius:14px}
+.auth-left h1{margin-bottom:8px;color:var(--accent)}
+.auth-left p{color:var(--muted);margin-bottom:0}
+.auth-card{background:var(--card);padding:22px;border-radius:12px;box-shadow:0 8px 20px rgba(16,24,40,0.06);border:1px solid #eef3f8}
+.form-group{margin-bottom:12px}
+.form-label{display:block;font-weight:600;margin-bottom:8px;color:#334}
+.input-row{display:flex;gap:8px}
+.input,select,button{font-size:15px}
+input[type="text"], input[type="password"], input[type="number"], .input, select{width:100%;padding:12px;border-radius:10px;border:1px solid #d7e3ef;background:#fbfeff}
+.small{font-size:13px;color:var(--muted)}
+.domain-select{width:46%}
+.domain-custom{flex:1}
+.email-preview{margin-top:8px;font-weight:700;color:var(--accent)}
+.actions{display:flex;gap:10px;align-items:center;margin-top:10px}
+.btn{background:linear-gradient(90deg,var(--accent),#2d5643);color:#fff;padding:10px 14px;border-radius:10px;border:none;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid #d7e3ef;color:#334}
+.muted-link{color:var(--muted);text-decoration:none;font-weight:600}
+.pw-meter{height:8px;border-radius:6px;background:#eef3f8;overflow:hidden}
+.pw-fill{height:100%;width:0;background:linear-gradient(90deg,#ff8a65,#ffd54f);transition:width .25s}
+.help{font-size:13px;color:#556}
+@media (max-width:900px){
+  .auth-wrap{grid-template-columns:1fr; padding:20px;margin:80px 12px}
+}

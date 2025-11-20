@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auth — Supabase + Insert Database</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+
+    .auth-container {
+      width: 360px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.8s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 14px;
+    }
+
+    input::placeholder {
+      color: #ddd;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #00c6ff;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #0099cc;
+    }
+
+    .switch {
+      text-align: center;
+      margin-top: 15px;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: underline;
+      color: #e0e0e0;
+    }
+
+    .message {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 14px;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container" id="authBox">
+    <h2 id="formTitle">Login</h2>
+
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+
+    <button onclick="submitAuth()" id="actionBtn">Login</button>
+
+    <div class="switch" onclick="toggleForm()">Belum punya akun? Register</div>
+
+    <div class="message" id="msg"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabaseUrl = "https://anyylsedulbqhtsxteej.supabase.co";
+
+    // ⚠️ GANTI key ini dengan anon key Supabase (bukan service_role)
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFueXlsc2VkdWxicWh0c3h0ZWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyNTQwNjQsImV4cCI6MjA3ODgzMDA2NH0.aW6vDlR5P8uv2Nm6dVxNMWgArDQbc1fecfRLACYQrBE";
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let isLogin = true;
+
+    window.toggleForm = function () {
+      isLogin = !isLogin;
+      document.getElementById("formTitle").innerText = isLogin ? "Login" : "Register";
+      document.getElementById("actionBtn").innerText = isLogin ? "Login" : "Register";
+      document.querySelector(".switch").innerText = isLogin ? "Belum punya akun? Register" : "Sudah punya akun? Login";
+      document.getElementById("msg").innerText = "";
+    };
+
+    window.submitAuth = async function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const msg = document.getElementById("msg");
+
+      msg.innerText = "";
+
+      if (!email || !password) {
+        msg.innerText = "Isi semua data!";
+        return;
+      }
+
+      // LOGIN
+      if (isLogin) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        console.log("LOGIN:", data, error);
+
+        msg.style.color = error ? "#ffbbbb" : "#bbffbb";
+        msg.innerText = error ? error.message : "Login berhasil!";
+        return;
+      }
+
+      // REGISTER
+      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      console.log("SIGNUP:", signupData, signupError);
+
+      if (signupError) {
+        msg.style.color = "#ffbbbb";
+        msg.innerText = signupError.message;
+        return;
+      }
+
+      const userId = signupData.user.id;
+
+      // INSERT OTOMATIS KE DATABASE
+      const { data: insertData, error: insertError } = await supabase
+        .from("users")
+        .insert([{ id: userId, email: email }]);
+
+      console.log("INSERT:", insertData, insertError);
+
+      if (insertError) {
+        msg.style.color = "#ffbbbb";
+        msg.innerText = "Akun dibuat, tapi gagal menambah ke tabel database.";
+      } else {
+        msg.style.color = "#bbffbb";
+        msg.innerText = "Registrasi berhasil + data masuk database!";
+      }
+    };
+  </script>
+</body>
+</html>

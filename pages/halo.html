@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Halo, ABE — SPA</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { background: #fafafa; color: #687d31; }
+    .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #8E9E28; box-shadow: 0 2px 6px rgba(0,0,0,0.06); position: fixed; top:0; width:100%; z-index:10; }
+    nav a { margin-left: 1rem; text-decoration: none; font-weight: bold; color: #ffffff; }
+    main { padding: 120px 20px; max-width: 1000px; margin: 0 auto; }
+    h2, h3 { margin-bottom: 20px; }
+    .card { background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 2px 10px #0001; margin-bottom: 25px; }
+    .form-group { margin-bottom: 15px; display:flex; flex-direction:column; gap: 6px; }
+    .form-group label { font-weight: 600; color: #2b4a42; font-size: 14px; }
+    input, select, textarea { padding: 12px 14px; border:1.5px solid #d0d0d0; border-radius: 8px; font-size: 15px; background: #fafbfc; transition: all 0.3s ease; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #42a870; background: #ffffff; box-shadow: 0 0 8px rgba(66,168,112,0.2); }
+    button { padding: 10px 20px; background:#42a870; color:white; border:none; border-radius:8px; cursor:pointer; font-size:15px; align-self:flex-start; transition: all 0.3s ease; font-weight: 600; }
+    button:hover { background: #359961; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(66,168,112,0.3); }
+    button:active { transform: translateY(0); }
+
+    /* Checklist (global) - compact, aligned, responsive */
+    #checklist {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: start;
+    }
+    #checklist label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: #ffffff;
+      border: 1px solid #eef6f0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.08s ease;
+      font-size: 0.95rem;
+      color: #2b4a42;
+    }
+    #checklist label:hover { background: #f6fff9; transform: translateY(-2px); }
+    #checklist input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      flex: 0 0 auto;
+      accent-color: #42a870;
+      cursor: pointer;
+    }
+    @media (max-width: 700px) {
+      #checklist { grid-template-columns: 1fr; }
+    }
+
+    /* Star rating */
+    .stars { display: flex; gap: 8px; justify-content: flex-start; }
+    .stars span { font-size: 32px; cursor: pointer; color: #ddd; transition: all 0.2s ease; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+    .stars span:hover { color: #ffc107; transform: scale(1.2) rotate(15deg); }
+    .stars .active { color: #ffc107; filter: drop-shadow(0 3px 8px rgba(255,193,7,0.4)); transform: scale(1.15); }
+
+    /* Task list */
+    #taskList, #taskHistory { list-style: none; margin-top: 15px; display: flex; flex-direction: column; gap: 10px; padding-left: 0; }
+    #taskList li, #taskHistory li { background: white; padding: 12px 15px; border-radius: 10px; box-shadow: 0 1px 5px #0001; display: flex; align-items: center; justify-content: space-between; }
+    #taskList input[type="checkbox"] { transform: scale(1.3); cursor: pointer; }
+    #taskList li.overdue { background: #ffd4d4; border: 1px solid #ff9d9d; }
+
+    /* Calendar */
+    #calendar { margin-top: 15px; }
+    .calendar { display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; margin-top:10px; }
+    .calendar div { padding:10px; background:white; border-radius:6px; box-shadow:0 1px 4px #0001; text-align:center; font-size:14px; cursor:pointer; transition:0.2s; }
+    .calendar div:hover { transform:scale(1.05); }
+    .calendar .has-task { background:#f9ffd1; font-weight:600; border:1px solid #ccc; }
+    .calendar .today { background:#c8f7c5; border:1px solid #9ac29a; }
+
+    /* Layout tugas rapi */
+    .task-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; align-items: start; }
+    .task-left, .task-right { display: flex; flex-direction: column; gap: 20px; }
+    @media (max-width: 900px) { .task-layout { grid-template-columns: 1fr; } }
+
+    /* Home */
+    .home-hero.soft { display:flex; justify-content:space-between; align-items:stretch; width:100%; height:80vh; background:#e8f4ff; margin-top:10px; }
+    .hero-left.soft { flex:3; background:url("/Home.jpeg") center center/cover no-repeat; border-radius:0; display:flex; flex-direction:column; justify-content:flex-end; padding:2rem 3rem; color:white; box-shadow:2px 0 8px rgba(0,0,0,0.05); }
+    .hero-right.soft { flex:2; background:white; padding:4rem; display:flex; flex-direction:column; justify-content:flex-start; border-left:6px solid #C8F4E5; box-shadow:-2px 0 8px rgba(0,0,0,0.05); }
+    .overlay-text.soft { color:white; text-shadow:0 2px 6px rgba(0,0,0,0.5); }
+    .hero-title.soft { font-size:2.2rem; font-weight:700; margin-bottom:0.4rem; }
+    .hero-sub.soft { font-size:0.95rem; opacity:0.95; }
+    .right-title.soft { color:#2b4a42; font-size:1.6rem; margin-bottom:1rem; font-weight:700; }
+    .right-desc.soft { color:#3a4a3f; font-size:1rem; line-height:1.8; margin-bottom:1.5rem; max-width:600px; }
+    .hero-video.soft { width:140px; height:auto; align-self:center; border-radius:10px; }
+
+    /* Motivation full background */
+    .motivation-bg {
+      position: relative;
+      height: 100vh;
+      width: 100%;
+      background: url("/motivasi.jpeg") center center/cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: white;
+    }
+    .motivation-bg h2,
+    .motivation-bg p,
+    .motivation-bg button {
+      position: relative;
+      z-index: 2;
+      margin: 0.5rem 0;
+    }
+    #shuffleBtn {
+      background: rgba(255,255,255,0.9);
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 25px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: 0.3s;
+      align-self: center;
+    }
+
+    /* Finance boxes */
+    #financeResult {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+      padding-left: 0;
+    }
+    #financeResult li {
+      list-style: none;
+      background: #c8f4e5;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      flex: 1 1 150px;
+      text-align: center;
+      font-weight: bold;
+      color: #2b4a42;
+    }
+
+    /* Finance layout: form left, results+chart right */
+    .finance-layout { display:flex; gap:20px; align-items:flex-start; }
+    .finance-left { flex: 1 1 360px; }
+    .finance-right { flex: 1 1 420px; display:flex; flex-direction:column; gap:12px; }
+    /* Checklist styles are defined globally above (grid, label styling, responsive) */
+    /* Ensure chart box shows without inner scrolling */
+    #financeChart { width:100% !important; height:220px !important; display:block; }
+    /* Make financeResult items slightly smaller to compact layout */
+    #financeResult li { padding: 12px 14px; font-size: 0.95rem; }
+
+    /* --- HABIT PAGE RE-DESIGN --- */
+
+/* Judul Habit */
+#app h2 {
+  color: #2b4a42;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* Card Habit lebih elegan */
+.habit-card {
+  background: linear-gradient(to bottom right, #ffffff, #f3f9ff);
+  padding: 25px;
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  border: 1px solid #e6effb;
+  margin-bottom: 30px;
+  transition: 0.3s;
+}
+
+.habit-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Label input */
+.habit-card label {
+  font-weight: 600;
+  color: #2d493f;
+}
+
+/* Dropdown & input */
+.habit-card select,
+.habit-card input {
+  border-radius: 10px;
+  border: 1px solid #cbd9e9;
+  background: #f8fbff;
+}
+
+/* Button Habit */
+.habit-card button {
+  padding: 10px 20px;
+  background: #3a6f54;
+  border-radius: 10px;
+  font-size: 15px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: 0.25s;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+.habit-card button:hover {
+  background: #2e5a45;
+  transform: translateY(-2px);
+}
+
+/* Stars styling */
+#stressStars span {
+  font-size: 32px;
+  padding: 3px;
+  transition: 0.2s;
+}
+
+#stressStars span:hover {
+  transform: scale(1.2);
+}
+
+/* Result box animation */
+#sResult div,
+#calResult {
+  animation: fadeIn 0.35s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Extra spacing */
+.habit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Habit layout: table left + stress right; calories under table, results under stress */
+.habit-layout {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 20px;
+  align-items: start;
+}
+.habit-left, .habit-right {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+@media (max-width: 900px) {
+  .habit-layout { grid-template-columns: 1fr; }
+}
+
+/* === GLOBAL UPGRADE === */
+body {
+  background: #f4f7fb;
+  color: #333;
+  font-family: 'Poppins', Arial, sans-serif;
+}
+
+/* Navbar upgrade */
+.navbar {
+  background: #8E9E28;
+  border-bottom: none;
+  padding: 1rem 3rem;
+  backdrop-filter: blur(8px);
+}
+
+.navbar .logo { color: #ffffff; }
+
+nav a {
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: 0.25s;
+}
+
+nav a:hover {
+  background: rgba(255,255,255,0.08);
+  color: #ffffff;
+}
+
+/* user-avatar (initials) shown left of username */
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+  color: #ffffff;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+}
+
+/* === CARD UPGRADE === */
+.card, .habit-card {
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+  border: 1px solid #e8edf5;
+}
+
+/* Input & Select upgrade */
+input, select, textarea {
+  background: #f9fbff;
+  border-radius: 10px;
+  transition: 0.25s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #89c5ff;
+  outline: none;
+  box-shadow: 0 0 6px rgba(90,153,255,0.4);
+}
+
+/* Button upgrade */
+button {
+  background: linear-gradient(to right, #3a6f54, #2d5643);
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  transition: 0.25s;
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* === HOME HERO UPGRADE === */
+.home-hero.soft {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.hero-right.soft {
+  border-left: none;
+  border-radius: 0 20px 20px 0;
+}
+
+.hero-left.soft {
+  border-radius: 20px 0 0 20px;
+}
+
+/* Right side text */
+.right-title.soft {
+  font-size: 1.9rem;
+}
+
+.right-desc.soft {
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+
+/* === TUGAS UPGRADE === */
+.task-layout {
+  gap: 40px;
+}
+
+.task-left .card {
+  border: 2px solid #e0e0e0;
+  background: #fafbfc;
+}
+
+.task-left .card h3 {
+  color: #2b4a42;
+  margin-bottom: 15px;
+}
+
+#taskList {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+#taskList li {
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-left: 5px solid #42a870;
+  background: linear-gradient(to right, #f0fdf4, #ffffff);
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+#taskList li:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  transform: translateX(4px);
+}
+
+#taskList li.overdue {
+  border-left: 5px solid #ff6b6b;
+  background: linear-gradient(to right, #ffe5e5, #ffffff);
+}
+
+#taskList li.overdue:hover {
+  box-shadow: 0 4px 12px rgba(255,107,107,0.2);
+}
+
+#taskHistory {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 10px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 12px;
+  margin-top: 15px;
+}
+
+#taskHistory li {
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  border-left: 4px solid #b3e5fc;
+  background: linear-gradient(to right, #e1f5fe, #ffffff);
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Calendar upgrade */
+.calendar div {
+  border-radius: 10px;
+  font-size: 15px;
+  padding: 12px 0;
+}
+.calendar .has-task {
+  background: #fff7c8;
+}
+.calendar .today {
+  background: #d7f9d7;
+  font-weight: bold;
+}
+
+/* === FINANCE UPGRADE === */
+#financeResult li {
+  border-radius: 14px;
+  background: linear-gradient(to bottom right, #d9f8ef, #c8f4e5);
+  font-size: 1rem;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+}
+
+/* === HABIT PAGE UPGRADE === */
+.habit-card {
+  border-radius: 20px;
+}
+
+#stressStars span {
+  font-size: 34px;
+  margin-right: 4px;
+  transition: 0.2s;
+}
+
+#stressStars span:hover {
+  transform: scale(1.25);
+}
+
+/* Result box */
+#sResult div {
+  border-radius: 12px !important;
+  padding: 14px !important;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+/* ==== FIX AGAR GRAFIK CHART.JS MUNCUL ==== */
+#financeChart {
+  width: 100% !important;
+  height: 300px !important;
+  display: block;
+}
+/* === SLIDER GALLERY UNTUK TUGAS === */
+.task-slider {
+  margin-top: 20px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+  position: relative;
+}
+
+.task-slider-track {
+  display: flex;
+  gap: 10px;
+  transition: transform 0.4s ease;
+}
+
+.task-slider img {
+  width: 100%;
+  max-width: 260px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.slider-btn:hover { background: #eef7ff; }
+
+.habit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.habit-table th, 
+.habit-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.habit-table th {
+  background: #3a6f54;
+  color: white;
+}
+
+#resetHabitTable {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: #e95656;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* === MOTIVATION SECTION — CLEAN & CENTERED === */
+.motivation-bg {
+  /* Full-screen background behind the fixed navbar */
+  position: fixed;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
+  height: 100vh;
+  width: 100%;
+  background: url("/motivasi.jpeg") center center/cover no-repeat;
+  background-attachment: fixed;
+  background-color: rgba(0,0,0,0.45);
+  background-blend-mode: multiply;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: white;
+  padding: 0 20px;
+  z-index: 0; /* navbar uses higher z-index */
+}
+
+.motivation-bg h2 {
+  font-size: 2.8rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.9), 0 2px 10px rgba(0,0,0,0.8), 0 0 30px rgba(0,0,0,0.7);
+  color: #FFD700 !important; /* kuning-emas */
+  letter-spacing: 1px;
+}
+
+.motivation-bg p {
+  max-width: 500px;
+  font-size: 1.3rem;
+  line-height: 1.6;
+  margin-bottom: 1.8rem;
+  text-shadow: 0 3px 15px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.6);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+#shuffleBtn {
+  background: rgba(255,255,255,0.9);
+  color: #427444;
+  padding: 15px 20px;     /* padding kecil */
+  border: none;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(3px);
+  transition: 0.2s ease;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+
+  max-width: 90px;       /* ⬅ MENDEFINISIKAN BATAS PANJANG */
+  width: auto;
+  text-align: center;
+}
+
+
+
+/* === FINANCE CLEAN === */
+#financeResult {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 15px;
+  padding-left: 0;
+}
+
+#financeResult li {
+  list-style: none;
+  flex: 1 1 150px;
+  padding: 18px;
+  text-align: center;
+  font-weight: bold;
+  color: #2b4a42;
+  background: linear-gradient(to bottom right, #d9f8ef, #c8f4e5);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+  transition: 0.25s;
+}
+
+#financeResult li:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+/* Chart box */
+#financeChart {
+  width: 100% !important;
+  height: 300px !important;
+  display: block;
+}
+
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <h1 class="logo">Halo, ABE</h1>
+    <nav>
+      <a href="#/home">Home</a>
+      <a href="#/motivation">Motivation</a>
+      <a href="#/tugas">Tugas</a>
+      <a href="#/finance">Finance</a>
+      <a href="#/habit">Habit</a>
+      <div id="userArea" style="display:inline-flex; gap:10px; align-items:center; margin-left:12px; vertical-align:middle;">
+        <span id="userAvatar" class="user-avatar" aria-hidden="false" title="User avatar"></span>
+        <span id="userInfo" style="color: #ffffff; font-size: 14px; display:inline-block; margin:0; font-weight:600;"></span>
+        <button id="logoutBtn" style="background:#e95656; padding:6px 10px; cursor:pointer; border:none; border-radius:8px; color:white; font-weight:600; font-size:13px; display:inline-block; box-sizing:border-box;">Logout</button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="app"></main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // ===== CHECK SESSION ON PAGE LOAD =====
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    async function checkAuth() {
+      try {
+        console.log('[Auth Check] Attempt', retryCount + 1);
+        const res = await fetch('/api/me', { 
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        const data = await res.json();
+        
+        console.log('[Auth Check] Response status:', res.status);
+        console.log('[Auth Check] Data:', data);
+        
+        if (!res.ok) {
+          console.warn('[Auth Check] Not authenticated (status ' + res.status + ')');
+          // Not authenticated — redirect to login
+          window.location.href = '/login/login.html';
+          return;
+        }
+        
+        // Show username and render initials avatar
+        console.log('[Auth Check] Success! User:', data.username);
+        const userInfoEl = document.getElementById('userInfo');
+        const avatarEl = document.getElementById('userAvatar');
+        const name = (data.username || '').trim();
+        userInfoEl.textContent = name;
+        if (avatarEl) {
+          // compute initials (1-2 chars)
+          const parts = name.split(/\s+/).filter(Boolean);
+          let initials = '';
+          if (parts.length === 0) initials = '';
+          else if (parts.length === 1) initials = parts[0].slice(0,2).toUpperCase();
+          else initials = (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+          avatarEl.textContent = initials;
+          avatarEl.title = name || 'User';
+
+          // derive a pleasant background color from the name
+          function nameToColor(str) {
+            let h = 0;
+            for (let i = 0; i < str.length; i++) {
+              h = str.charCodeAt(i) + ((h << 5) - h);
+            }
+            h = Math.abs(h) % 360; // hue
+            return `hsl(${h} 55% 40%)`;
+          }
+
+          avatarEl.style.background = name ? nameToColor(name) : '#6d6d6d';
+          avatarEl.style.color = '#fff';
+        }
+        
+      } catch (err) {
+        console.error('[Auth Check] Error:', err);
+        
+        // Retry logic for network errors
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log('[Auth Check] Retrying in 500ms...');
+          setTimeout(checkAuth, 500);
+        } else {
+          console.error('[Auth Check] Max retries reached, redirecting to login');
+          window.location.href = '/login/login.html';
+        }
+      }
+    }
+    
+    window.addEventListener('load', checkAuth);
+
+    // ===== LOGOUT HANDLER =====
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        if (res.ok) {
+          window.location.href = '/login/login.html';
+        }
+      } catch (err) {
+        console.error('Logout error:', err);
+      }
+    });
+
+    const app = document.getElementById("app");
+    window.addEventListener("hashchange", loadPage);
+    window.addEventListener("load", loadPage);
+
+    function loadPage() {
+      const route = location.hash.replace("#/", "") || "home";
+      const pages = { home: homePage, motivation: motivationPage, tugas: tugasPage, finance: financePage, habit: habitPage };
+      app.innerHTML = pages[route] ? pages[route]() : "<h2>404 Not Found</h2>";
+      if (typeof initFunctions[route] === "function") initFunctions[route]();
+    }
+
+    function homePage() {
+      return `
+      <section class="home-hero soft">
+        <div class="hero-left soft">
+          <div class="overlay-text soft">
+            <h1 class="hero-title soft">Halo, ABE</h1>
+            <p class="hero-sub soft">Asisten Belajar</p>
+          </div>
+        </div>
+        <div class="hero-right soft">
+          <h2 class="right-title soft">Selamat datang!</h2>
+          <p class="right-desc soft">
+            Halo, ABE membantu kamu mengatur motivasi, tugas, keuangan, dan kebiasaan sehat secara efisien.
+          </p>
+          <video class="hero-video soft" src="/maskot.mp4" autoplay loop muted playsinline></video>
+        </div>
+      </section>`;
+    }
+
+    function motivationPage() {
+      return `
+        <section class="motivation-bg">
+          <h2>Motivation</h2>
+          <p id="motext"></p>
+          <button id="shuffleBtn">Shuffle</button>
+        </section>`;
+    }
+
+    function tugasPage() {
+      return `
+        <h2>Tugas</h2>
+        <div class="task-layout">
+          <div class="task-left">
+            <div class="card">
+              <div class="form-group">
+                <label>Nama Tugas</label>
+                <input id="tName" placeholder="Contoh: Laporan Fisika"/>
+              </div>
+              <div class="form-group">
+                <label>Deadline</label>
+                <input type="date" id="tDeadline" />
+              </div>
+              <div class="form-group">
+                <label>Mata Pelajaran</label>
+                <input id="tMapel" placeholder="Contoh: Fisika"/>
+              </div>
+              <div class="form-group">
+                <label>Tingkat Kesulitann</label>
+                <div class="stars" id="starRate">
+                  <span data-v="1">★</span>
+                  <span data-v="2">★</span>
+                  <span data-v="3">★</span>
+                  <span data-v="4">★</span>
+                  <span data-v="5">★</span>
+                </div>
+              </div>
+              <button id="addTask">Tambah Tugas</button>
+            </div>
+            <div class="task-slider">
+  <div class="task-slider-track" id="taskSliderTrack">
+    <img src="/tugas1.jpeg" />
+    <img src="/tugas2.jpeg" />
+    <img src="/tugas3.jpeg" />
+    <img src="/tugas4.jpeg" />
+  </div>
+</div>
+
+          </div>
+          <div class="task-right">
+            <div class="card">
+              <h3>Prioritas Tugas</h3>
+              <ul id="taskList"></ul>
+              <h3 style="margin-top:20px;">History Tugas</h3>
+              <ul id="taskHistory"></ul>
+            </div>
+            <div class="card">
+              <h3>Kalender Tugas</h3>
+              <div id="calendar"></div>
+              <p id="taskOnDate" style="margin-top:10px;font-size:14px;color:#444;"></p>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function financePage() {
+      return `
+        <h2>Finance</h2>
+        <div class="finance-layout">
+          <div class="finance-left card">
+            <div class="form-group">
+              <label>Pemasukan Mingguan</label>
+              <input id="income" placeholder="Rp 0" />
+            </div>
+            <div class="form-group">
+              <label>Kebutuhan</label>
+              <div id="checklist">
+                <label><input type="checkbox" value="Uang Saku"> Uang Saku</label>
+                <label><input type="checkbox" value="Kas"> Kas</label>
+                <label><input type="checkbox" value="Sekolah"> Sekolah</label>
+                <label><input type="checkbox" value="Tabungan"> Tabungan</label>
+                <label><input type="checkbox" value="Dana Darurat"> Dana Darurat</label>
+                <label><input type="checkbox" value="Keperluan rumah"> Keperluan rumah</label>
+                <label><input type="checkbox" value="Uang makan"> Uang makan</label>
+                <label><input type="checkbox" value="Acara"> Acara</label>
+              </div>
+            </div>
+            <button id="calcFinance">Hitung</button>
+          </div>
+
+          <div class="finance-right">
+            <div class="card">
+              <h3>Hasil Pembagian</h3>
+              <ul id="financeResult" style="margin:0; padding-left:0;"></ul>
+            </div>
+            <div class="card">
+              <h3>Grafik Pembagian Uang</h3>
+              <canvas id="financeChart"></canvas>
+            </div>
+          </div>
+        </div>
+        `;
+    }
+
+ function habitPage() {
+  return `
+    <h2>Habit</h2>
+
+    <div class="habit-layout">
+      <div class="habit-left">
+        <div class="card habit-box">
+          <h3>📅 Aktivitas Harian</h3>
+
+          <table class="habit-table">
+            <thead>
+              <tr>
+                <th>Kegiatan</th>
+                <th>Pagi</th>
+                <th>Siang</th>
+                <th>Malam</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Minum Air</td>
+                <td><input type="checkbox" class="hab water-morning"></td>
+                <td><input type="checkbox" class="hab water-noon"></td>
+                <td><input type="checkbox" class="hab water-night"></td>
+              </tr>
+              <tr>
+                <td>Makan</td>
+                <td><input type="checkbox" class="hab eat-morning"></td>
+                <td><input type="checkbox" class="hab eat-noon"></td>
+                <td><input type="checkbox" class="hab eat-night"></td>
+              </tr>
+              <tr>
+                <td>Tidur</td>
+                <td>-</td>
+                <td>-</td>
+                <td><input type="checkbox" class="hab sleep-night"></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button id="resetHabitTable">Reset Checklist Hari Ini</button>
+        </div>
+
+        <div class="card habit-card">
+          <h3>Kalori Harian</h3>
+          <div class="form-group">
+            <label>Berat Badan (kg)</label>
+            <input id="weight" type="number" placeholder="Contoh: 60" />
+          </div>
+          <div class="form-group">
+            <label>Tinggi Badan (cm)</label>
+            <input id="height" type="number" placeholder="Contoh: 170" />
+          </div>
+          <div class="form-group">
+            <label>Usia</label>
+            <input id="age" type="number" placeholder="Contoh: 20" />
+          </div>
+          <div class="form-group">
+            <label>Jenis Kelamin</label>
+            <select id="gender">
+              <option value="">Pilih</option>
+              <option value="male">Laki-laki</option>
+              <option value="female">Perempuan</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Aktivitas Harian</label>
+            <select id="activity">
+              <option value="">Pilih</option>
+              <option value="1.2">Jarang bergerak</option>
+              <option value="1.375">Ringan (olahraga 1-2x/minggu)</option>
+              <option value="1.55">Sedang (olahraga 3-5x/minggu)</option>
+              <option value="1.725">Aktif (olahraga 6-7x/minggu)</option>
+              <option value="1.9">Sangat aktif (pekerjaan fisik berat)</option>
+            </select>
+          </div>
+          <button id="calcCalories">Hitung Kalori</button>
+        </div>
+      </div>
+
+      <div class="habit-right">
+        <div class="card habit-card">
+          <h3>Stress Management</h3>
+          <div class="form-group">
+            <label>Alasan Stress</label>
+            <select id="sReason">
+              <option value="">Pilih alasan</option>
+              <option value="tugas">Tugas Sekolah</option>
+              <option value="bullying">Bullying</option>
+              <option value="ekonomi">Ekonomi</option>
+              <option value="keluarga">Keluarga</option>
+              <option value="teman">Teman</option>
+              <option value="lain">Yang Lain</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tingkat Stress</label>
+            <div class="stars" id="stressStars">
+              <span data-v="1">★</span>
+              <span data-v="2">★</span>
+              <span data-v="3">★</span>
+              <span data-v="4">★</span>
+              <span data-v="5">★</span>
+            </div>
+          </div>
+          <button id="solveStress">Dapatkan Solusi</button>
+          <p id="sResult"></p>
+        </div>
+
+        <div class="card">
+          <h3>Hasil Kalori</h3>
+          <div id="calResult"></div>
+        </div>
+      </div>
+    </div>
+
+  `;
+}
+
+
+    const initFunctions = {
+      motivation() {
+        const list = [
+          "Kamu lebih kuat dari yang kamu kira.",
+          "Progres kecil tetaplah progres.",
+          "Tetap maju, jangan berhenti.",
+          "Kerja kerasmu akan terbayar.",
+          "Tidak apa-apa istirahat, asal jangan menyerah.",
+          "Setiap hari adalah kesempatan baru.",
+          "Jangan bandingkan perjalananmu dengan orang lain; setiap orang punya waktunya sendiri untuk bersinar.",
+        ];
+        const motext = document.getElementById("motext");
+        const shuffleBtn = document.getElementById("shuffleBtn");
+        const randomQuote = () => motext.innerText = list[Math.floor(Math.random() * list.length)];
+        shuffleBtn.addEventListener("click", randomQuote);
+        randomQuote();
+      },
+
+      tugas() {
+        const stars = document.querySelectorAll("#starRate span");
+        let rating = 0;
+        const tasks = [];
+        const history = [];
+
+        stars.forEach(star => {
+          star.addEventListener("click", () => {
+            rating = star.dataset.v;
+            stars.forEach(s => s.classList.toggle("active", s.dataset.v <= rating));
+          });
+        });
+
+        // Load existing tasks from API
+        async function loadTasksFromDB() {
+          try {
+            const res = await fetch('/api/tugas', { credentials: 'include' });
+            if (res.ok) {
+              const data = await res.json();
+              tasks.length = 0;
+              tasks.push(...(data.tasks || []));
+              history.length = 0;
+              history.push(...(data.completed || []));
+              renderTasks();
+              renderCalendar();
+              renderHistory();
+            }
+          } catch (err) {
+            console.error('Error loading tasks:', err);
+          }
+        }
+
+        document.getElementById("addTask").onclick = async () => {
+          const name = tName.value.trim();
+          const mapel = tMapel.value.trim();
+          const deadline = tDeadline.value;
+          if (!name || !mapel || !deadline) return alert("Lengkapi semua data tugas!");
+          
+          try {
+            const res = await fetch('/api/tugas', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ name, mapel, deadline, rating: Number(rating) })
+            });
+            
+            if (res.ok) {
+              const data = await res.json();
+              tasks.push(data.task);
+              renderTasks();
+              renderCalendar();
+              
+              rating = 0;
+              stars.forEach(s => s.classList.remove("active"));
+              tName.value = ""; tMapel.value = ""; tDeadline.value = "";
+            } else {
+              alert("Error menambahkan tugas");
+            }
+          } catch (err) {
+            console.error('Error adding task:', err);
+            alert("Error menambahkan tugas");
+          }
+        };
+
+        function renderTasks() {
+          const today = new Date();
+          const sorted = tasks.slice().sort((a,b)=>{
+            const da = new Date(a.deadline), db = new Date(b.deadline);
+            if (da.getTime() === db.getTime()) return b.rating - a.rating;
+            return da - db;
+          });
+
+          const list = document.getElementById("taskList");
+          list.innerHTML = "";
+          sorted.forEach((t, i) => {
+            const li = document.createElement("li");
+            const d = new Date(t.deadline);
+            if (d < new Date(today.getFullYear(), today.getMonth(), today.getDate())) li.classList.add("overdue");
+            li.innerHTML = `
+              <div style="display:flex; align-items:center; justify-content:flex-start;">
+                <input type="checkbox" data-taskid="${t.id}" />
+              </div>
+              <div style="padding-right:8px;">
+                <strong>${t.name}</strong> — ${t.mapel}<br><small>${t.deadline}</small>
+              </div>
+              <div style="text-align:right; color:#666; font-size:13px;">
+                ★${t.rating}
+              </div>
+            `;
+            list.appendChild(li);
+          });
+
+          list.querySelectorAll("input[type='checkbox']").forEach(cb=>{
+            cb.addEventListener("change", async (e)=>{
+              if(e.target.checked){
+                const taskId = e.target.dataset.taskid;
+                try {
+                  const res = await fetch(`/api/tugas/${taskId}/complete`, {
+                    method: 'POST',
+                    credentials: 'include'
+                  });
+                  if (res.ok) {
+                    await loadTasksFromDB();
+                  }
+                } catch (err) {
+                  console.error('Error completing task:', err);
+                }
+              }
+            });
+          });
+        }
+
+        function renderHistory() {
+          const hlist = document.getElementById("taskHistory");
+          hlist.innerHTML = "";
+          if (history.length === 0) {
+            hlist.innerHTML = "<li style='color:#777;'>Belum ada tugas yang diselesaikan.</li>";
+            return;
+          }
+          history.forEach(h=>{
+            const li = document.createElement("li");
+            li.innerHTML = `<div><strong>${h.name}</strong> — ${h.mapel} (★${h.rating})<br><small>Selesai • ${h.deadline}</small></div>`;
+            hlist.appendChild(li);
+          });
+        }
+
+        function renderCalendar() {
+          const calendarEl = document.getElementById("calendar");
+          const showEl = document.getElementById("taskOnDate");
+          calendarEl.innerHTML = "";
+          showEl.textContent = "";
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const today = now.getDate();
+          const grid = document.createElement("div");
+          grid.classList.add("calendar");
+
+          for (let d = 1; d <= daysInMonth; d++) {
+            const cell = document.createElement("div");
+            cell.textContent = d;
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const taskListForDate = tasks.filter(t => t.deadline === dateStr);
+            if (taskListForDate.length) cell.classList.add("has-task");
+            if (d === today) cell.classList.add("today");
+            cell.addEventListener("click",()=>{
+              if(taskListForDate.length){
+                showEl.innerHTML = `<strong>Tugas tanggal ${dateStr}:</strong><br>` +
+                  taskListForDate.map(t=>`${t.name} (${t.mapel}) ★${t.rating}`).join("<br>");
+              } else {
+                showEl.textContent = `Tidak ada tugas tanggal ${dateStr}.`;
+              }
+            });
+            grid.appendChild(cell);
+          }
+          calendarEl.appendChild(grid);
+        }
+
+        loadTasksFromDB();
+      // ==== SLIDER INFINITE LOOP SUPER SMOOTH ====
+const track = document.getElementById("taskSliderTrack");
+const slideWidth = 270; // lebar tiap gambar
+let index = 0;
+
+// Clone slide pertama → taruh di akhir
+const firstClone = track.children[0].cloneNode(true);
+track.appendChild(firstClone);
+
+function moveSlider() {
+  index++;
+  track.style.transition = "transform 0.6s ease";
+  track.style.transform = `translateX(-${index * slideWidth}px)`;
+
+  // Jika masuk slide clone → reset ke awal tanpa transisi
+  if (index === track.children.length - 1) {
+    setTimeout(() => {
+      track.style.transition = "none";       // matikan transisi
+      track.style.transform = `translateX(0)`; 
+      index = 0;                              // reset index
+    }, 600); // tunggu sampai transisi selesai
+  }
+}
+
+setInterval(moveSlider, 2600);
+
+
+      },
+
+   finance() {
+  const incomeField = document.getElementById("income");
+  incomeField.addEventListener("input", () => {
+    let v = incomeField.value.replace(/[^0-9]/g, "");
+    incomeField.value = "Rp " + v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  });
+
+  let financeChart = null; // SIMPAN grafik agar bisa dihapus & diganti
+
+  document.getElementById("calcFinance").onclick = () => {
+    const raw = document.getElementById("income").value.replace(/[^0-9]/g, "");
+    const uang = Number(raw);
+
+    const kebutuhanDipilih = Array.from(
+      document.querySelectorAll("#checklist input:checked")
+    ).map(cb => cb.value);
+
+    if (kebutuhanDipilih.length === 0)
+      return alert("Pilih minimal satu kebutuhan!");
+
+    const bobotPersen = {
+      "Uang Saku": 20,
+      "Kas": 10,
+      "Sekolah": 25,
+      "Tabungan": 25,
+      "Dana Darurat": 10,
+      "Keperluan rumah": 15,
+      "Uang makan": 20,
+      "Acara": 10
+    };
+
+    let total = 0;
+    kebutuhanDipilih.forEach(k => {
+      total += bobotPersen[k] || 0;
+    });
+
+    if (total === 0)
+      return alert("Bobot kebutuhan tidak valid!");
+
+    const out = document.getElementById("financeResult");
+    out.innerHTML = "";
+
+    const labels = [];
+    const values = [];
+
+    kebutuhanDipilih.forEach(k => {
+      const persen = bobotPersen[k];
+      const porsi = Math.round((persen / total) * uang);
+
+      labels.push(k);
+      values.push(porsi);
+
+      const li = document.createElement("li");
+      li.textContent = `${k}: Rp ${porsi.toLocaleString("id-ID")}`;
+      out.appendChild(li);
+    });
+
+    // ==== CHART ====  
+    const ctx = document.getElementById("financeChart").getContext("2d");
+
+    // Hapus grafik lama
+    if (financeChart) {
+      financeChart.destroy();
+    }
+
+    financeChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  };
+},
+
+
+
+ habit() {
+  // ⭐ Stress Management
+  const stars = document.querySelectorAll("#stressStars span");
+  let stressLevel = 0;
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      stressLevel = star.dataset.v;
+      stars.forEach(s => s.classList.toggle("active", s.dataset.v <= stressLevel));
+    });
+  });
+
+ document.getElementById("solveStress").onclick = () => {
+  const reason = document.getElementById("sReason").value;
+  if (!reason || !stressLevel) return alert("Pilih alasan dan tingkat stress!");
+
+  const lvl = Number(stressLevel);
+  let msg = "", kategori = "";
+
+  const solusi = {
+    tugas: {
+      rendah: "Atur waktu belajar, buat to-do list kecil. 🌿",
+      sedang: "Prioritaskan tugas penting, ambil jeda 10 menit antar tugas. 🌤️",
+      tinggi: "Minta bantuan guru atau teman, jangan pikul semuanya sendiri. 🔴",
+    },
+    bullying: {
+      rendah: "Abaikan komentar negatif dan tetap percaya diri. 🌿",
+      sedang: "Ceritakan pada teman yang bisa dipercaya. 🌤️",
+      tinggi: "Segera lapor guru/orang tua — kamu berhak merasa aman. 🔴",
+    },
+    ekonomi: {
+      rendah: "Catat pengeluaran, hemat dari hal kecil. 🌿",
+      sedang: "Diskusikan dengan keluarga untuk solusi bersama. 🌤️",
+      tinggi: "Cari bantuan sekolah/lembaga sosial, jangan hadapi sendiri. 🔴",
+    },
+    keluarga: {
+      rendah: "Luangkan waktu bersama tanpa gadget. 🌿",
+      sedang: "Bicarakan perasaanmu dengan tenang. 🌤️",
+      tinggi: "Minta bantuan guru BK atau konselor untuk menengahi. 🔴",
+    },
+    teman: {
+      rendah: "Tunggu suasana tenang, baru bicara baik-baik. 🌿",
+      sedang: "Ceritakan perasaanmu dengan jujur tapi sopan. 🌤️",
+      tinggi: "Jaga jarak sementara, minta dukungan orang dewasa. 🔴",
+    },
+    lain: {
+      rendah: "Refleksi diri dan atur ulang rutinitas kecilmu. 🌿",
+      sedang: "Ceritakan ke teman dekat agar tidak menumpuk di hati. 🌤️",
+      tinggi: "Pertimbangkan bicara dengan psikolog atau guru BK. 🔴",
+    }
+  };
+
+  if (lvl <= 2) kategori = "rendah";
+  else if (lvl <= 4) kategori = "sedang";
+  else kategori = "tinggi";
+
+  msg = solusi[reason][kategori];
+
+  const warna =
+    kategori === "rendah" ? "green" :
+    kategori === "sedang" ? "orange" : "red";
+
+  document.getElementById("sResult").innerHTML = `
+    <div style="border-left: 6px solid ${warna}; padding: 10px; border-radius: 6px; background: ${warna === "green" ? "#eafbea" : warna === "orange" ? "#fff4e6" : "#ffeaea"};">
+      <strong style="color:${warna}; text-transform:uppercase;">Tingkat Stress: ${kategori}</strong><br>
+      <span style="font-size: 1.1em;">${msg}</span>
+    </div>
+  `;
+};
+
+
+  // 🔥 Kalori Harian
+  document.getElementById("calcCalories").onclick = () => {
+    const w = Number(document.getElementById("weight").value);
+    const h = Number(document.getElementById("height").value);
+    const a = Number(document.getElementById("age").value);
+    const gender = document.getElementById("gender").value;
+    const activity = Number(document.getElementById("activity").value);
+
+    if (!w || !h || !a || !gender || !activity)
+      return alert("Lengkapi semua data kalori!");
+
+    let bmr = gender === "male"
+      ? 10 * w + 6.25 * h - 5 * a + 5
+      : 10 * w + 6.25 * h - 5 * a - 161;
+
+    const calories = Math.round(bmr * activity);
+    let note = "";
+    if (activity <= 1.2) note = "Kamu butuh lebih banyak gerak!";
+    else if (activity <= 1.55) note = "Aktivitasmu cukup seimbang.";
+    else note = "Hebat! Aktivitasmu sangat tinggi.";
+
+    document.getElementById("calResult").innerHTML =
+      `Kebutuhan kalori harianmu: <strong>${calories.toLocaleString("id-ID")} kkal</strong><br>${note}`;
+  };
+  // 🔵 RESET CHECKLIST
+document.getElementById("resetHabitTable").onclick = () => {
+  document.querySelectorAll(".hab").forEach(cb => cb.checked = false);
+  alert("Checklist harian direset!");
+};
+
+// 🔵 SIMPAN CHECKLIST SECARA LOKAL
+function saveHabitTable() {
+  const data = {};
+  document.querySelectorAll(".hab").forEach((cb, i) => {
+    data[i] = cb.checked;
+  });
+  localStorage.setItem("habitDaily", JSON.stringify(data));
+}
+
+// 🔵 LOAD ULANG DATA CHECKLIST
+function loadHabitTable() {
+  const data = JSON.parse(localStorage.getItem("habitDaily") || "{}");
+  const boxes = document.querySelectorAll(".hab");
+  boxes.forEach((cb, i) => {
+    if (data[i]) cb.checked = true;
+  });
+}
+
+// Simpan otomatis tiap dicentang
+document.querySelectorAll(".hab").forEach(cb => {
+  cb.addEventListener("change", saveHabitTable);
+});
+
+// Load saat habit() dipanggil
+loadHabitTable();
+
+}
+
+    };
+  </script>
+</body>
+</html>

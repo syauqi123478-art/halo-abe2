@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Daftar — Halo, ABE</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/auth.css">
+  <style>
+    .logo{font-weight:800;color:var(--accent)}
+    /* Fullscreen background for register */
+    body {
+      background: url('/backgroundlogin.jpeg') center center/cover no-repeat fixed;
+      min-height: 100vh;
+      background-color: #000;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .navbar, .auth-wrap, .auth-card {
+      position: relative;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar"></header>
+
+  <main>
+    <div class="auth-wrap">
+      <div class="auth-left">
+        <p style="font-weight:800; color:#2b4a42; margin-bottom:6px; font-size:1.6rem;">Halo, ABE</p>
+        <h1>Buat akun baru</h1>
+        <p>Daftar dengan username dan kata sandi. Setelah mendaftar, kamu otomatis akan masuk.</p>
+      </div>
+
+      <div class="auth-card">
+        <form id="registerForm">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input id="regUsername" class="input" type="text" placeholder="masukkan username" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Kata sandi</label>
+            <input id="regPass" class="input" type="password" placeholder="Minimal 8 karakter" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Konfirmasi kata sandi</label>
+            <input id="regPass2" class="input" type="password" placeholder="Ketik ulang kata sandi" required>
+          </div>
+
+          <div id="regMessage" class="small" style="color:#b33;margin-bottom:8px;display:none"></div>
+
+          <div class="actions">
+            <button class="btn" type="submit">Daftar</button>
+            <a class="muted-link" href="/login/login.html">Sudah punya akun?</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const regForm = document.getElementById('registerForm');
+    const regMessage = document.getElementById('regMessage');
+
+    regForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      regMessage.style.display = 'none';
+
+      const username = document.getElementById('regUsername').value.trim();
+      const pass = document.getElementById('regPass').value;
+      const pass2 = document.getElementById('regPass2').value;
+
+      if (!username) {
+        regMessage.textContent = 'Masukkan username.';
+        regMessage.style.display = '';
+        return;
+      }
+      if (pass.length < 8) {
+        regMessage.textContent = 'Kata sandi minimal 8 karakter.';
+        regMessage.style.display = '';
+        return;
+      }
+      if (pass !== pass2) {
+        regMessage.textContent = 'Kata sandi dan konfirmasi tidak cocok.';
+        regMessage.style.display = '';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password: pass })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          regMessage.textContent = data.error || 'Pendaftaran gagal';
+          regMessage.style.display = '';
+          return;
+        }
+        // sukses -> redirect ke home
+        window.location.href = '/pages/halo.html';
+      } catch (err) {
+        console.error('Register error:', err);
+        regMessage.textContent = 'Terjadi kesalahan: ' + err.message;
+        regMessage.style.display = '';
+      }
+    });
+  </script>
+</body>
+</html>

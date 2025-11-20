@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Masuk — Halo, ABE</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/auth.css">
+  <style>
+    .logo{font-weight:800;color:var(--accent)}
+    /* Fullscreen background for login */
+    body {
+      background: url('/backgroundlogin.jpeg') center center/cover no-repeat fixed;
+      min-height: 100vh;
+      background-color: #000;
+      position: relative;
+    }
+    /* dim layer so text remains readable */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 1;
+      pointer-events: none;
+    }
+    /* Bring auth content above the overlay */
+    .navbar, .auth-wrap, .auth-card {
+      position: relative;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <a href="/" style="display:inline-block; vertical-align:middle;">
+      <img src="/logow.png" alt="Halo, ABE" style="height:96px; display:block;">
+    </a>
+  </header>
+
+  <main>
+    <div class="auth-wrap">
+      <div class="auth-left">
+        <p style="font-weight:800; color:#2b4a42; margin-bottom:6px; font-size:1.6rem;">Halo, ABE</p>
+        <h1 style="font-size:2rem; margin-top:0.2rem;">Selamat datang kembali</h1>
+        <p>halo, ABE adalah asisten belajar untuk mengatur tugas, keuangan, dan kebiasaan harianmu.</p>
+      </div>
+
+      <div class="auth-card">
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input id="username" class="input" type="text" placeholder="masukkan username" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Kata sandi</label>
+            <input id="password" class="input" type="password" placeholder="Masukkan kata sandi" required>
+          </div>
+
+          <div id="loginMessage" class="small" style="color:#b33;margin-bottom:8px;display:none"></div>
+
+          <div class="actions">
+            <button class="btn" type="submit">Masuk</button>
+            <a class="muted-link" href="/login/register.html">Buat akun baru</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const loginMessage = document.getElementById('loginMessage');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginMessage.style.display = 'none';
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      if (!username || !password) {
+        loginMessage.textContent = 'Isi username dan kata sandi.';
+        loginMessage.style.display = '';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          loginMessage.textContent = data.error || 'Login gagal';
+          loginMessage.style.display = '';
+          return;
+        }
+        // sukses → tunggu sebentar biar cookie tersimpan, lalu redirect
+        console.log('✓ Login API success:', data);
+        setTimeout(() => {
+          window.location.href = '/pages/halo.html';
+        }, 100);
+      } catch (err) {
+        console.error('Login error:', err);
+        loginMessage.textContent = 'Terjadi kesalahan: ' + err.message;
+        loginMessage.style.display = '';
+      }
+    });
+  </script>
+</body>
+</html>
